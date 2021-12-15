@@ -3,6 +3,7 @@ const express = require("express");
 const ejs = require("ejs");
 const dotenv = require("dotenv").config();
 const mongoose = require("mongoose");
+const encrypt = require('mongoose-encryption');
 
 // Start up an instance of app
 const app = express();
@@ -27,11 +28,17 @@ async function main() {
     await mongoose.connect(`mongodb+srv://admin-first:${password}@cluster0.hi5zx.mongodb.net/secretUserDB`);
 };
 
-// Create collection scheme and module
+// Create collection scheme
 const userSchema = new mongoose.Schema({
     email: String,
     password: String
 });
+
+// Encrypted user password
+const secret = process.env.ENCRYPT_KEY;
+userSchema.plugin(encrypt, { secret: secret, encryptedFields: ["password"] });
+
+// Create collection module
 const User = mongoose.model("User", userSchema);
 
 app.get("/", (req, res) => {
