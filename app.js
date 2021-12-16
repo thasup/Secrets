@@ -4,6 +4,7 @@ const ejs = require("ejs");
 const dotenv = require("dotenv").config();
 const mongoose = require("mongoose");
 const encrypt = require('mongoose-encryption');
+const sha512 = require('js-sha512');
 
 // Start up an instance of app
 const app = express();
@@ -38,6 +39,8 @@ const userSchema = new mongoose.Schema({
 const secret = process.env.ENCRYPT_KEY;
 userSchema.plugin(encrypt, { secret: secret, encryptedFields: ["password"] });
 
+const saltRounds = 10;
+
 // Create collection module
 const User = mongoose.model("User", userSchema);
 
@@ -56,7 +59,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
     const newUser = new User({
         email: req.body.username,
-        password: req.body.password,
+        password: sha512(req.body.password)
     });
 
     newUser.save((err) => {
@@ -70,7 +73,7 @@ app.post("/register", (req, res) => {
 
 app.post("/login", (req, res) => {
     const username = req.body.username;
-    const password = req.body.password;
+    const password = sha(req.body.password);
 
     User.findOne({email: username}, (err, foundUser) => {
         if (err) {
